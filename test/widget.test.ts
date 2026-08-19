@@ -102,10 +102,12 @@ describe("registerFooterWidget", () => {
       render: () => colored,
       selfColorize: true,
     });
-    // stock composer: supportsAnsi is false → ANSI stripped
+    // every composer (incl. stock) passes ANSI through via ctx.ui.theme.fg,
+    // so selfColorized ANSI is kept.
     expect(ctx.setStatusCalls[0]?.[0]).toBe("ollama-cloud");
-    expect(ctx.setStatusCalls[0]?.[1]).toBe("hi");
-    expect(reg.colorCapability.supportsAnsi).toBe(false);
+    expect(ctx.setStatusCalls[0]?.[1]).toBe(colored);
+    expect(reg.colorCapability.supportsAnsi).toBe(true);
+    expect(reg.colorCapability.supportsThemeFg).toBe(true);
     reg.dispose();
     const last = ctx.setStatusCalls.at(-1);
     expect(last?.[0]).toBe("ollama-cloud");

@@ -39,21 +39,11 @@ export type {
 
 const STATUSBAR_KEY = "__piStatusbarRegistry";
 
-function colorCapabilityFor(kind: DetectedComposer["kind"]): ColorCapability {
-  switch (kind) {
-    case "pi-statusbar":
-      // ANSI passes through the per-section styler; one theme color per section.
-      return { supportsAnsi: true, supportsPerWidgetColor: true, supportsThemeFg: false };
-    case "pi-powerline-footer":
-      // customItems.color is one color per item; ANSI in setStatus values is
-      // passed through by the extension_statuses/customItems renderers.
-      return { supportsAnsi: true, supportsPerWidgetColor: true, supportsThemeFg: false };
-    case "stock":
-    default:
-      // Stock footer extension-statuses line is dimmed; ANSI may be mangled by
-      // the dim wrapper, so the bridge strips it for safety.
-      return { supportsAnsi: false, supportsPerWidgetColor: false, supportsThemeFg: false };
-  }
+function colorCapabilityFor(_kind: DetectedComposer["kind"]): ColorCapability {
+  // ctx.ui.theme.fg (pi-core) is available on every path, and every composer
+  // (and the stock footer's extension-statuses line) passes embedded ANSI
+  // through verbatim. So widgets can self-colorize theme-correctly everywhere.
+  return { supportsAnsi: true, supportsPerWidgetColor: true, supportsThemeFg: true };
 }
 
 /**
@@ -114,6 +104,9 @@ export function registerFooterWidget(
       id: widget.id,
       render: (sbCtx: unknown) => {
         const acc = accessorsFromStatusbar(sbCtx);
+        // pi-statusbar doesn't expose theme on SectionAccessors, but the bridge
+        // has ctx in closure — so providers get ctx.ui.theme.fg here too.
+        acc.getThemeFg = ctxAccessors.getThemeFg;
         latestAccessors = acc; // latest accessors available to provider via handle
         const raw = widget.render ? renderWith(acc) : currentText;
         currentText = emit(raw);
@@ -145,7 +138,7 @@ export function registerFooterWidget(
       if (disposed) return;
       push(text);
     },
-    accessors: composer.kind === "pi-statusbar" ? null : ctxAccessors,
+    accessors: ctxAccessors,
     colorCapability,
     dispose(): void {
       disposed = true;

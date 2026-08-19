@@ -7,6 +7,7 @@
  *   (an internal symbol it sets during load). This is fragile by design — the
  *   bridge degrades safely to "stock" if the symbol disappears.
  */
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { DetectedComposer, WidgetAccessors } from "./types.ts";
 
 const STATUSBAR_KEY = "__piStatusbarRegistry";
@@ -31,16 +32,7 @@ export function detectComposer(): DetectedComposer {
  * pi-powerline-footer / stock footer). Aggregates usage from the session branch
  * the same way the stock footer does.
  */
-export function accessorsFromContext(ctx: {
-  cwd: string;
-  model?: { provider: string; id: string; name?: string } | null;
-  getThinkingLevel?: () => string;
-  getContextUsage?: () => { percent?: number | null; contextWindow?: number; tokens?: number | null } | null | undefined;
-  sessionManager: {
-    getCwd(): string;
-    getBranch(): Iterable<unknown>;
-  };
-}): WidgetAccessors {
+export function accessorsFromContext(ctx: ExtensionContext): WidgetAccessors {
   const getUsage = () => {
     let input = 0;
     let output = 0;
@@ -64,10 +56,16 @@ export function accessorsFromContext(ctx: {
     }
     return { input, output, cacheRead, cacheWrite, cost };
   };
+  const themeFg =
+    (): ((color: string, text: string) => string) | null => {
+      const t = ctx.ui?.theme;
+      if (!t?.fg) return null;
+      return (color: string, text: string) => t.fg(color as never, text);
+    };
   return {
     getCwd: () => ctx.sessionManager.getCwd() ?? ctx.cwd,
     getModel: () => ctx.model ?? undefined,
-    getThinkingLevel: () => ctx.getThinkingLevel?.() ?? "off",
+    getThinkingLevel: () => ctx.thinkingLevel ?? "off",
     getContextUsage: () => {
       const cu = ctx.getContextUsage?.();
       if (!cu) return undefined;
@@ -79,7 +77,7 @@ export function accessorsFromContext(ctx: {
     },
     getGitBranch: () => null, // stock path doesn't expose git; pi-statusbar path does
     getUsage,
-    getThemeFg: () => null,
+    getThemeFg: themeFg,
   };
 }
 

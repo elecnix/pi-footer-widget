@@ -72,8 +72,8 @@ interface ColorCapability {
 }
 ```
 
-- **Color fidelity:** colorize blissfully (embed ANSI) when `supportsAnsi` is true. When false, the bridge strips ANSI before emitting so the composer never sees escapes it can't handle. If you prefer a single composer-applied color, leave `selfColorize` false and let the composer theme / `customItems.color` decide.
-- **Accessors:** the bridge builds `WidgetAccessors` from `ExtensionContext` on the push path and from pi-statusbar's `SectionAccessors` on the pull path — so providers get accessors in both modes. `getThemeFg()` is null today (see issues below).
+- **Color fidelity:** colorize blissfully via `acc.getThemeFg()(color, text)` (backed by pi-core `ctx.ui.theme.fg`). Every composer — and the stock footer's extension-statuses line — passes embedded ANSI through verbatim, so per-widget, per-threshold color (green/yellow/red) survives everywhere today. `supportsAnsi` and `supportsThemeFg` are always true. If you prefer a single composer-applied color, leave `selfColorize` false and let the composer theme / `customItems.color` decide.
+- **Accessors:** the bridge builds `WidgetAccessors` from `ExtensionContext` on the push path and from pi-statusbar's `SectionAccessors` on the pull path — so providers get accessors in both modes. `getThemeFg()` is non-null whenever `ctx.ui.theme.fg` is available (always, in practice).
 
 ## Layout declaration (non-authoritative)
 

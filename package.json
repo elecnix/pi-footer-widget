@@ -1,6 +1,6 @@
 {
   "name": "pi-footer-widget",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Composer-agnostic footer widget surface for the pi coding agent. Bridges pi-statusbar, pi-powerline-footer, and the stock footer with a unified push/pull interface.",
   "keywords": [
